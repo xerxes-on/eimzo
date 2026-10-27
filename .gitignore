@@ -1,0 +1,17 @@
+/vendor/
+/.phpstan.cache/
+/.phpunit.cache/
+.phpunit.result.cache
+.env
+.env.*
+!.env.example
+/storage/
+*.pfx
+*.p12
+*.pem
+*.key
+*.vault
+*.class
+*.jar
+*.tar.gz
+coverage/

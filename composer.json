@@ -1,0 +1,20 @@
+{
+    "name": "xerxes/eimzo",
+    "description": "Reusable headless E-IMZO signing, desktop client and encrypted certificate vault",
+    "type": "library",
+    "license": "MIT",
+    "require": {"php": "^8.2", "ext-sodium": "*", "phrity/websocket": "^3.3", "symfony/process": "^7.2"},
+    "autoload": {"psr-4": {"Xerxes\\Eimzo\\": "src/"}},
+    "autoload-dev": {"psr-4": {"Xerxes\\Eimzo\\Tests\\": "tests/"}},
+    "require-dev": {"ext-openssl": "*", "laravel/pint": "^1.24", "phpstan/phpstan": "^2.1", "phpunit/phpunit": "^11.5"},
+    "scripts": {
+        "test": "phpunit",
+        "format": "pint --preset=psr12 src tests",
+        "format-check": "pint --test --preset=psr12 src tests",
+        "analyse": "phpstan analyse --memory-limit=512M",
+        "check": ["composer validate --strict", "@format-check", "@analyse", "@test"]
+    },
+    "config": {"sort-packages": true, "allow-plugins": false, "platform": {"php": "8.2.30"}},
+    "extra": {"branch-alias": {"dev-main": "0.1.x-dev"}},
+    "suggest": {"ext-openssl": "For the optional OpenSSL PKCS7 backend with compatible PKCS12 certificates"}
+}

@@ -1,0 +1,26 @@
+name: Tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: sodium, openssl, mbstring, dom
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: composer check
+      - run: composer audit
+  native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t eimzo-test .
+      - run: docker run --rm --network none eimzo-test
