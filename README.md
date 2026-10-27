@@ -102,4 +102,14 @@ composer audit
 
 Default tests use synthetic certificate data only. Optional native integration tests use a generated RSA certificate when `EIMZO_NATIVE_RUNTIME` points to an installed provider.
 
+To run the full native test suite in Linux Docker without downloading the provider during the build:
+
+```sh
+cp /secure/official/E-IMZO-v6.4.7.tar.gz ./runtime/E-IMZO-v6.4.7.tar.gz
+docker build -t eimzo-test .
+docker run --rm --network none eimzo-test
+```
+
+This is the official software archive, not your certificate. It is checksum-verified and excluded from the source repository. Keep images containing vendor libraries private unless their distribution is permitted by the vendor. The hosted native CI job needs access to the official download server; download connectivity failures are distinct from signing-test failures.
+
 References: [official E-IMZO downloads](https://e-imzo.soliq.uz/download/), [E-IMZO integration documentation](https://github.com/qo0p/e-imzo-doc), [PHP CMS signing](https://www.php.net/manual/en/function.openssl-cms-sign.php).
