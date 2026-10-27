@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Xerxes\Eimzo;
 
 use SensitiveParameter;
-use Symfony\Component\Process\Process;
 use Throwable;
 
 /** Headless, one-shot JVM using the pinned official E-IMZO cryptographic provider. */
@@ -42,40 +41,15 @@ final readonly class NativeSigner implements Signer
         } finally {
             sodium_memzero($pfx);
         }
-        $process = null;
-        $output = '';
-        $received = 0;
-        $overflow = false;
         try {
-            // Do not inherit application secrets or JVM injection variables into the child process.
-            $names = array_unique(array_merge(array_keys(getenv()), array_keys($_ENV), array_keys($_SERVER)));
-            $environment = array_fill_keys($names, false);
-            $environment['LANG'] = 'C.UTF-8';
-            $process = new Process(
+            $response = (new NativeProcess())->run(
                 [$this->javaBinary, '-Djava.awt.headless=true', '-Xmx256m', '-cp',
                 $this->runtimeDirectory.PATH_SEPARATOR.$this->runtimeDirectory.'/lib/*', 'EimzoBridge'],
-                null,
-                $environment,
                 $input,
                 $this->timeout
             );
-            // Symfony's default output buffers spill to disk; collect only bounded in-memory output.
-            $process->disableOutput();
-            $process->run(function (string $type, #[SensitiveParameter] string $chunk) use (&$output, &$received, &$overflow): void {
-                if ($overflow) {
-                    return;
-                } // Cleanup can drain pending output through this callback again.
-                $received += strlen($chunk);
-                if ($received > 12_582_912) {
-                    $overflow = true;
-                    throw new EimzoException('Native signer response exceeds the size limit.');
-                }
-                if ($type === Process::OUT) {
-                    $output .= $chunk;
-                }
-            });
-            $result = json_decode($output, true, 16, JSON_THROW_ON_ERROR);
-            if (!$process->isSuccessful() || !is_array($result) || ($result['verified'] ?? false) !== true
+            $result = json_decode($response['output'], true, 16, JSON_THROW_ON_ERROR);
+            if ($response['exitCode'] !== 0 || !is_array($result) || ($result['verified'] ?? false) !== true
                 || !is_string($result['pkcs7_64'] ?? null) || $result['pkcs7_64'] === ''
                 || base64_decode($result['pkcs7_64'], true) === false) {
                 $code = is_array($result) ? ($result['error'] ?? '') : '';
@@ -89,27 +63,12 @@ final readonly class NativeSigner implements Signer
             }
             return $result['pkcs7_64'];
         } catch (EimzoException $e) {
-            // Drop callback frames containing provider output, even when exception arguments are enabled.
+            // Drop internal frames containing provider output, even when exception arguments are enabled.
             throw new EimzoException($e->getMessage());
         } catch (Throwable) {
             throw new EimzoException('Native signing failed or timed out. Check Java and the installed provider runtime.');
         } finally {
-            try {
-                if ($process !== null) {
-                    $process->stop(0);
-                }
-            } catch (Throwable) {
-                throw new EimzoException('Native signer process cleanup failed. Inspect the signing worker before retrying.');
-            } finally {
-                sodium_memzero($input);
-                if ($process !== null) {
-                    try {
-                        $process->setInput(null);
-                    } catch (Throwable) {
-                        throw new EimzoException('Native signer input cleanup failed. Inspect the signing worker before retrying.');
-                    }
-                }
-            }
+            sodium_memzero($input);
         }
     }
 

@@ -3,10 +3,10 @@
     "description": "Reusable headless E-IMZO signing, desktop client and encrypted certificate vault",
     "type": "library",
     "license": "MIT",
-    "require": {"php": "^8.2", "ext-sodium": "*", "phrity/websocket": "^3.3", "symfony/process": "^7.2"},
+    "require": {"php": "^8.2", "ext-sodium": "*", "phrity/websocket": "^3.3"},
     "autoload": {"psr-4": {"Xerxes\\Eimzo\\": "src/"}},
     "autoload-dev": {"psr-4": {"Xerxes\\Eimzo\\Tests\\": "tests/"}},
-    "require-dev": {"ext-openssl": "*", "laravel/pint": "^1.24", "phpstan/phpstan": "^2.1", "phpunit/phpunit": "^11.5"},
+    "require-dev": {"ext-openssl": "*", "laravel/pint": "^1.24", "phpstan/phpstan": "^2.1", "phpunit/phpunit": "^11.5", "symfony/process": "^7.2"},
     "scripts": {
         "test": "phpunit",
         "format": "pint --preset=psr12 src tests",

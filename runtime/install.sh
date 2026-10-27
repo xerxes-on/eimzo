@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Install a pinned provider from the official distribution. No certificate/password is needed here.
-destination="${1:?Usage: bash install.sh /absolute/runtime/directory}"
+destination="${1:?Usage: bash install.sh /absolute/runtime/directory [official-archive.tar.gz]}"
 [[ "$destination" = /* && "$destination" != / && "$destination" != *:* ]] || { echo 'Use an absolute runtime directory without colons.' >&2; exit 1; }
 [[ ! -e "$destination" && ! -L "$destination" ]] || { echo 'Destination already exists; install a new version separately.' >&2; exit 1; }
 for executable in curl sha256sum tar javac; do command -v "$executable" >/dev/null; done
@@ -10,8 +10,13 @@ parent="$(dirname -- "$destination")"
 mkdir -p -- "$parent"
 stage="$(mktemp -d "$parent/.eimzo-install.XXXXXXXX")"
 trap 'rm -rf -- "$stage"' EXIT
-curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 --connect-timeout 10 --max-time 180 \
-    'https://dls.soliq.uz/v6.4.7/E-IMZO-v6.4.7.tar.gz' -o "$stage/provider.tar.gz"
+if [[ -n "${2:-}" ]]; then
+    cp -- "$2" "$stage/provider.tar.gz"
+else
+    curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 --ipv4 \
+        --connect-timeout 30 --max-time 180 --retry 2 --retry-delay 2 --retry-max-time 150 \
+        'https://dls.soliq.uz/v6.4.7/E-IMZO-v6.4.7.tar.gz' -o "$stage/provider.tar.gz"
+fi
 printf '%s  %s\n' 'c077152064cd44c8ade4ba877177061a2edfa039a2c0755751cc65e199611a76' "$stage/provider.tar.gz" | sha256sum --check --status
 mkdir "$stage/unpacked" "$stage/ready"
 tar -xzf "$stage/provider.tar.gz" -C "$stage/unpacked" --no-same-owner

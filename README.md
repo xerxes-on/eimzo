@@ -6,10 +6,9 @@ The package contains PHP code, a small Java bridge and a pinned runtime installe
 
 ## Install
 
-Until the package is listed on Packagist, add its Git repository explicitly:
+Install from [Packagist](https://packagist.org/packages/xerxes/eimzo):
 
 ```sh
-composer config repositories.eimzo vcs https://github.com/xerxes-on/eimzo.git
 composer require xerxes/eimzo:^0.1
 ```
 
@@ -22,6 +21,8 @@ bash vendor/xerxes/eimzo/runtime/install.sh /absolute/application/storage/eimzo-
 ```
 
 Use a destination writable by the deployment user. Keep the installed runtime read-only for the application user. The installer refuses an existing destination and verifies the official archive's pinned SHA-256 before extracting it. Install future versions into a new directory, test, then change configuration. Runtime binaries are external vendor dependencies, not covered by this repository's MIT license; see [THIRD_PARTY.md](THIRD_PARTY.md).
+
+If your server cannot reach the vendor's download host, obtain that exact official archive from a network that can reach it and pass the local archive as the installer's second argument. The same checksum verification remains mandatory; runtime signing itself is fully offline.
 
 ## Certificate and password
 
