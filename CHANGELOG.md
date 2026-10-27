@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Remove the native Docker job from automatic CI because GitHub-hosted runners cannot reach the official provider download host; retain the PHP 8.2–8.4 checks and manual native test instructions.
+- Document downloading the pinned archive from a machine in Uzbekistan and transferring it for offline installation and signing elsewhere. Uzbekistan-only access remains unconfirmed.
+
 ## 0.1.0
 
 - Headless Linux PKCS#7 signing through the official E-IMZO 6.4.7 provider, with attached/detached output and verification before return.

@@ -22,7 +22,24 @@ bash vendor/xerxes/eimzo/runtime/install.sh /absolute/application/storage/eimzo-
 
 Use a destination writable by the deployment user. Keep the installed runtime read-only for the application user. The installer refuses an existing destination and verifies the official archive's pinned SHA-256 before extracting it. Install future versions into a new directory, test, then change configuration. Runtime binaries are external vendor dependencies, not covered by this repository's MIT license; see [THIRD_PARTY.md](THIRD_PARTY.md).
 
-If your server cannot reach the vendor's download host, obtain that exact official archive from a network that can reach it and pass the local archive as the installer's second argument. The same checksum verification remains mandatory; runtime signing itself is fully offline.
+### Downloading from Uzbekistan for a server abroad
+
+The official archive download succeeded from a machine in Uzbekistan, while GitHub-hosted runners timed out connecting to `dls.soliq.uz`. Regional or cloud-IP filtering is suspected, but an Uzbekistan-only policy has not been confirmed. If your server cannot connect, use a machine in Uzbekistan with working access to download the archive, then transfer it to your server:
+
+```sh
+# On the machine in Uzbekistan:
+curl --fail --location --proto '=https' --connect-timeout 30 --max-time 180 \
+  https://dls.soliq.uz/v6.4.7/E-IMZO-v6.4.7.tar.gz \
+  -o E-IMZO-v6.4.7.tar.gz
+scp E-IMZO-v6.4.7.tar.gz deploy@your-server:/secure/official/
+
+# On your server, after installing the prerequisites above:
+bash vendor/xerxes/eimzo/runtime/install.sh \
+  /absolute/application/storage/eimzo-runtime \
+  /secure/official/E-IMZO-v6.4.7.tar.gz
+```
+
+Replace the example host and paths with your deployment values; create the transfer destination first. The installer applies the same mandatory pinned checksum verification to a local archive. Your signing server does not need to be in Uzbekistan: signing runs fully offline after provider installation.
 
 ## Certificate and password
 
@@ -100,7 +117,9 @@ composer check
 composer audit
 ```
 
-Default tests use synthetic certificate data only. Optional native integration tests use a generated RSA certificate when `EIMZO_NATIVE_RUNTIME` points to an installed provider.
+Automatic CI runs Composer validation, formatting, static analysis, PHP tests and dependency audits on PHP 8.2–8.4. It excludes native provider installation and signing tests because the official download host is unreachable from the tested GitHub runners. A green CI run therefore does not establish native provider compatibility.
+
+Default tests use synthetic certificate data only. Optional native integration tests use a generated RSA certificate when `EIMZO_NATIVE_RUNTIME` points to an installed provider. Run these locally before releasing changes to the Java bridge, provider installer or native signer.
 
 To run the full native test suite in Linux Docker without downloading the provider during the build:
 
@@ -110,6 +129,6 @@ docker build -t eimzo-test .
 docker run --rm --network none eimzo-test
 ```
 
-This is the official software archive, not your certificate. It is checksum-verified and excluded from the source repository. Keep images containing vendor libraries private unless their distribution is permitted by the vendor. The hosted native CI job needs access to the official download server; download connectivity failures are distinct from signing-test failures.
+This is the official software archive, not your certificate. It is checksum-verified and excluded from the source repository. Keep images containing vendor libraries private unless their distribution is permitted by the vendor.
 
 References: [official E-IMZO downloads](https://e-imzo.soliq.uz/download/), [E-IMZO integration documentation](https://github.com/qo0p/e-imzo-doc), [PHP CMS signing](https://www.php.net/manual/en/function.openssl-cms-sign.php).

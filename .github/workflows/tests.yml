@@ -18,9 +18,3 @@ jobs:
       - run: composer install --no-interaction --prefer-dist
       - run: composer check
       - run: composer audit
-  native:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t eimzo-test .
-      - run: docker run --rm --network none eimzo-test
